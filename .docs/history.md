@@ -12,3 +12,19 @@
     sys.path.append(os.path.join(os.path.dirname(__file__), '..')) 
     ...
     ```
+
+### src layout 에서의 pytest-django 설정
+
+- src 구조 중심으로 pytest-django 를 실행시키려면 모듈 참조 에러가 남, 다음과 같이 해겷
+    ```text
+    # apps.py
+      class AppsConfig(AppConfig):
+        default_auto_field = 'django.db.models.BigAutoField'
+        name = 'src.apps' # 수정
+  
+    # settings
+    INSTALLED_APPS = [
+        'src.apps', # 수정
+    ] 
+    ...    
+     
