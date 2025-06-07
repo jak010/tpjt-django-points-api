@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 
 from django.db import models
@@ -16,7 +18,7 @@ class Point(TimestampedModel):
         USED = "USED"
         CANCELED = "CANCELED"
 
-    id = models.PositiveBigIntegerField(primary_key=True)
+    id = models.BigAutoField(primary_key=True)
     user_id = models.PositiveBigIntegerField(null=False)
     amount = models.PositiveBigIntegerField(null=False)
     type = models.CharField(
@@ -29,3 +31,21 @@ class Point(TimestampedModel):
     version = models.PositiveBigIntegerField(default=0)
 
     point_balance = models.ForeignKey(PointBalance, name="point_balance", on_delete=models.CASCADE)
+
+    @classmethod
+    def initilaized(cls,
+                    user_id: int,
+                    amount: float,
+                    type: Point.Type,
+                    description: str,
+                    balance_snapshot: float,
+                    point_balance: PointBalance
+                    ):
+        return cls(
+            user_id=user_id,
+            amount=amount,
+            type=type.value,
+            description=description,
+            balance_snapshot=balance_snapshot,
+            point_balance=point_balance
+        )

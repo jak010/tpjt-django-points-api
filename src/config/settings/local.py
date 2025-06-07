@@ -37,33 +37,32 @@ USE_TZ = True
 # INSTALLED_APPS
 DEVELOP_APPS = [
     'django_extensions',
-    "contrib",
-    'apps',
+    'src.apps',
 
 ]
 
 INSTALLED_APPS = INSTALLED_APPS + DEVELOP_APPS
 
 # SQL LOGGING
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'sql': {
-#             '()': 'django_sqlformatter.SqlFormatter',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'DEBUG',
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'sql',
-#         },
-#     },
-#     'loggers': {
-#         'django.db.backends': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',
-#         }
-#     }
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'sql': {
+            '()': 'django_sqlformatter.SqlFormatter',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'sql',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        }
+    }
+}
