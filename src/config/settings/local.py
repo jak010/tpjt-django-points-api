@@ -12,18 +12,14 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sample',
+        'NAME': 'points_db',
         'USER': 'root',
         'PASSWORD': '1234',
         'HOST': '127.0.0.1',
-        'PORT': '9901',
+        'PORT': '23306',
         'OPTIONS': {
             'charset': 'utf8mb4'
-        },
-        # 'TEST': { # 테스트를 django test로 할 거면 주석 해제 후 사용
-        #     'CHARSET': 'utf8',
-        #     'COLLATION': 'utf8_general_ci',
-        # }
+        }
     }
 }
 
@@ -48,25 +44,25 @@ DEVELOP_APPS = [
 INSTALLED_APPS = INSTALLED_APPS + DEVELOP_APPS
 
 # SQL LOGGING
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'sql': {
-            '()': 'django_sqlformatter.SqlFormatter',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'sql',
-        },
-    },
-    'loggers': {
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        }
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'sql': {
+#             '()': 'django_sqlformatter.SqlFormatter',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'sql',
+#         },
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#         }
+#     }
+# }

@@ -1,10 +1,25 @@
-version: '3'
+version: "3"
+
 services:
-  db:
+  points_db:
+    image: mysql:8.0.40-debian
+    platform: linux/amd64
     ports:
-      - "9901:3306"
+      - "23306:3306"
     expose:
-      - "9901"
-    build:
-      context: .
-    platform: linux/amd64  # mac에서 compose 할 경우 주석 해제 한 후 사용할 것
+      - "23306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: points_db
+    volumes:
+      - "./sqls/:/docker-entrypoint-initdb.d/"
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_unicode_ci
+
+  points_cache:
+    container_name: dev_django_points_cache
+    image: redis:7.2-alpine
+    ports:
+      - "26379:6379"
+    restart: unless-stopped
