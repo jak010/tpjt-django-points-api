@@ -66,3 +66,15 @@ LOGGING = {
         }
     }
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Django로 구현하는 실시간 적립금 조회 서비스',  # OpenAPI 3.0 페이지 타이틀,
+    'DESCRIPTION': '',  # OpenAPI 3.0 페이지 설명,
+    'VERSION': '1.0.0',  # 버전 정보
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SORT_OPERATION_PARAMETERS': False,  # 이걸 추가하면 parameter를 class에 정의한 필드 순서대로 Swagger에 노출 시킬 수 있음
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
