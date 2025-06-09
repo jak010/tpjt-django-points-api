@@ -1,10 +1,15 @@
-from src.apps.models import Point
+from src.apps.models import Point, PointBalance
 from src.apps.models.point_balance import PointBalance
 
 from django.db import transaction
 
 
 class PointService:
+
+    def search_points(self, *, user_id: int):
+        """ 포인트 조회하기 """
+
+        return Point.objects.filter(user_id=user_id)
 
     @transaction.atomic()
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:

@@ -19,7 +19,8 @@ DATABASES = {
         'PORT': '23306',
         'OPTIONS': {
             'charset': 'utf8mb4'
-        }
+        },
+        "CONN_MAX_AGE": 600
     }
 }
 

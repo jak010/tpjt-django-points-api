@@ -1,14 +1,37 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
 from drf_spectacular.utils import extend_schema
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from src.apps.service.v1.point_service import PointService
 from src.apps.views.v1.schema import (
     point_earn_schema,
     point_use_schema,
-    point_cancel_schema
+    point_cancel_schema,
+    point_search_schema
 )
+
+
+class PointHistoryView(APIView):
+    point_service = PointService()
+
+    @extend_schema(
+        tags=["V1-POINT"],
+        operation_id="V1-POINT-SEARCH",
+        description="포인트 조회하기",
+        request=None,
+        responses={
+            200: point_search_schema.PointHistoryResponse(many=True)
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        user_id = kwargs.get('user_id')
+
+        data = self.point_service.search_points(user_id=user_id)
+        response = point_search_schema.PointHistoryResponse(
+            data, many=True
+        )
+
+        return Response(content_type="application/json", status=200, data=response.data)
 
 
 class PointEarnView(APIView):
@@ -88,7 +111,7 @@ class PointCancelView(APIView):
         response = point_cancel_schema.PointCancelResponse(
             {
                 "data": self.point_service.cancel_points(
-                    point_id = kwargs.get("point_id"),
+                    point_id=kwargs.get("point_id"),
                     user_id=serializer.validated_data["user_id"],
                     amount=serializer.validated_data["amount"],
                     description=serializer.validated_data["description"],
