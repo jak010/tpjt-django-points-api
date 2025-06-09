@@ -20,7 +20,18 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4'
         },
-        "CONN_MAX_AGE": 600
+    },
+    'repr': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'points_db',
+        'USER': 'root',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '23306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            "isolation_level": "REPEATABLE READ"
+        },
     }
 }
 

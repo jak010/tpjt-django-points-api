@@ -1,8 +1,10 @@
-from django.db import transaction
+from django.db import transaction, connection
+from django.conf import settings
 from rest_framework.exceptions import NotFound
 
 from src.apps.models import Point
 from src.apps.models.point_balance import PointBalance
+from django.db import connection, reset_queries
 
 
 class PointService:
@@ -11,7 +13,7 @@ class PointService:
         """ 포인트 조회하기 """
         return Point.objects.filter(user_id=user_id)
 
-    @transaction.atomic()
+    @transaction.atomic
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
         """ 포인트 적립하기
         Implements:
@@ -23,10 +25,16 @@ class PointService:
             description (str): 포인트 적립 설명
 
         Note:
-            강의에서 로직을 그대로 따라 작성했는데 포인트 적립은 입력한 amount 만큼 upsert를 처리하는게 맞을 듯
+            - 강의에서 로직을 그대로 따라 작성했는데 포인트 적립은 입력한 amount 만큼 upsert를 처리하는게 맞을 듯
+            - Django 에서 Isolation level 다루기
+              - https://medium.com/buserbrasil/database-isolation-levels-anomalies-and-how-to-handle-them-with-django-992889d233d5
+
+        TODO:
+            - 25-06-10, REPEATABLE_READ와 Point Balance.filter의 경우 Optmistic Lock 처리하기
+                Ref, https://github.com/dobby-teacher/fastcampus-promotion-project/blob/e57cae3c09264215203c00f51896e4e28249071e/PROJECT-PROMOTION/promotion/point-service/src/main/java/com/fastcampus/pointservice/repository/PointBalanceRepository.java#L11
         """
 
-        point_balance = PointBalance.objects.filter(user_id=user_id).first()
+        point_balance = PointBalance.objects.using("repr").filter(user_id=user_id).first()  # TODO, 2025-06-10 : 이 시점에 Optimistic Lock 처리 필요
 
         if point_balance is None:
             point_balance = PointBalance.initialized(
@@ -61,6 +69,7 @@ class PointService:
             description (str): 포인트 사용 설명
 
         Notes:
+            TODO, 2025-06-10 :
 
         """
 
