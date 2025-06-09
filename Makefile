@@ -1,7 +1,7 @@
 
 PYHTONPATH=$(PWD)/src
 SRC=./src
-DOCKER=./docker
+DOCKER=./.docker
 DJANGO_SETTINGS_MODULE=config.settings.local
 
 run.local:
