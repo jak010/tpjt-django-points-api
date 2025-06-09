@@ -12,7 +12,18 @@ class PointService:
 
     @transaction.atomic()
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
-        """ 포인트 적립하기 """
+        """ 포인트 적립하기
+        Args:
+            user_id (int): 사용자 ID
+            amount (float): 포인트 적립한 금액
+            description (str): 포인트 적립 설명
+
+        Implements:
+            이미 존재하는 사용자라면 amount 만큼 더해주고, 존재하지 않는 경우 balance 0으로 초기화
+
+        Note:
+            강의에서 로직을 그대로 따라 작성했는데 포인트 적립은 입력한 amount 만큼 upsert를 처리하는게 맞을 듯
+        """
 
         point_balance = PointBalance.objects.filter(user_id=user_id).first()
 
