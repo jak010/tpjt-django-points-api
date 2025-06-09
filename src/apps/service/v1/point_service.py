@@ -1,16 +1,13 @@
-from rest_framework.pagination import LimitOffsetPagination
-
-from src.apps.models import Point, PointBalance
-from src.apps.models.point_balance import PointBalance
-
 from django.db import transaction
+
+from src.apps.models import Point
+from src.apps.models.point_balance import PointBalance
 
 
 class PointService:
 
     def search_points(self, *, user_id: int):
         """ 포인트 조회하기 """
-
         return Point.objects.filter(user_id=user_id)
 
     @transaction.atomic()
@@ -22,7 +19,7 @@ class PointService:
         if point_balance is None:
             point_balance = PointBalance.initialized(
                 user_id=user_id,
-                balance=0,
+                balance=0
             )
         else:
             point_balance.add_balance(amount)

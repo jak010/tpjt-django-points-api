@@ -27,4 +27,37 @@
         'src.apps', # 수정
     ] 
     ...    
-     
+
+## 25.06.09
+
+## APIView에 Pagination 적용하기
+
+- 이 프로젝트를 진행하면서 APIView를 사용하는 경우, Pagination을 구현한 방법은 다음과 같다.
+    - Examples
+        ```text
+        class PointHistoryView(APIView, LimitOffsetPagination):                  
+            ...
+            def get(self, request, *args, **kwargs):
+               ...
+       
+                paginate_queryset = self.paginate_queryset(
+                    self.point_service.search_points(user_id=user_id),
+                    request,
+                    view=self
+                )
+        
+                paginate = point_search_schema.PointHistoryPaginateResponse(
+                    {
+                        "count": self.count,
+                        "next": self.get_next_link(),
+                        "previous": self.get_previous_link(),
+                        "data": paginate_queryset
+                    }
+                )
+        
+                return Response(
+                    content_type="application/json",
+                    status=200,
+                    data=paginate.data
+                ) 
+        ```
