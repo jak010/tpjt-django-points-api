@@ -13,9 +13,9 @@ class PointEarnRequest(serializers.Serializer):
 class PointEarnResponse(serializers.Serializer):
     """ 포인트 적립하기 """
 
-    class _PointModelSerializer(serializers.ModelSerializer):
+    class _PointEarnModelSerializer(serializers.ModelSerializer):
         class Meta:
             model = Point
             fields = ["id", "user_id", "amount", "type", "description", "balance_snapshot"]
 
-    data = _PointModelSerializer()
+    data = _PointEarnModelSerializer()

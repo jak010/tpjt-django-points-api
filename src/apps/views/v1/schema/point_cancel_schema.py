@@ -10,9 +10,9 @@ class PointCancelRequest(serializers.Serializer):
 
 
 class PointCancelResponse(serializers.Serializer):
-    class _PointModelSerializer(serializers.ModelSerializer):
+    class _PointCancelModelSerializer(serializers.ModelSerializer):
         class Meta:
             model = Point
             fields = ["id", "user_id", "amount", "type", "description", "balance_snapshot", "created_at"]
 
-    data = _PointModelSerializer()
+    data = _PointCancelModelSerializer()
