@@ -1,3 +1,5 @@
+from rest_framework.pagination import LimitOffsetPagination
+
 from src.apps.models import Point, PointBalance
 from src.apps.models.point_balance import PointBalance
 

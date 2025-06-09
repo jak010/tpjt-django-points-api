@@ -1,4 +1,5 @@
 from drf_spectacular.utils import extend_schema
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,27 +12,44 @@ from src.apps.views.v1.schema import (
 )
 
 
-class PointHistoryView(APIView):
+class PointHistoryView(APIView, LimitOffsetPagination):
     point_service = PointService()
 
     @extend_schema(
         tags=["V1-POINT"],
         operation_id="V1-POINT-SEARCH",
         description="포인트 조회하기",
-        request=None,
+        parameters=[point_search_schema.PointHistoryRequest],
         responses={
-            200: point_search_schema.PointHistoryResponse(many=True)
+            200: point_search_schema.PointHistoryPaginateResponse()
         }
     )
     def get(self, request, *args, **kwargs):
         user_id = kwargs.get('user_id')
 
-        data = self.point_service.search_points(user_id=user_id)
-        response = point_search_schema.PointHistoryResponse(
-            data, many=True
+        request_serializer = point_search_schema.PointHistoryRequest(data=request.query_params)
+        request_serializer.is_valid(raise_exception=True)
+
+        paginate_queryset = self.paginate_queryset(
+            self.point_service.search_points(user_id=user_id),
+            request,
+            view=self
         )
 
-        return Response(content_type="application/json", status=200, data=response.data)
+        paginate = point_search_schema.PointHistoryPaginateResponse(
+            {
+                "count": self.count,
+                "next": self.get_next_link(),
+                "previous": self.get_previous_link(),
+                "data": paginate_queryset
+            }
+        )
+
+        return Response(
+            content_type="application/json",
+            status=200,
+            data=paginate.data
+        )
 
 
 class PointEarnView(APIView):
