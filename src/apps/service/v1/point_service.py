@@ -1,4 +1,5 @@
 from django.db import transaction
+from rest_framework.exceptions import NotFound
 
 from src.apps.models import Point
 from src.apps.models.point_balance import PointBalance
@@ -13,13 +14,13 @@ class PointService:
     @transaction.atomic()
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
         """ 포인트 적립하기
+        Implements:
+            이미 존재하는 사용자라면 amount 만큼 더해주고, 존재하지 않는 경우 balance 0으로 초기화
+
         Args:
             user_id (int): 사용자 ID
             amount (float): 포인트 적립한 금액
             description (str): 포인트 적립 설명
-
-        Implements:
-            이미 존재하는 사용자라면 amount 만큼 더해주고, 존재하지 않는 경우 balance 0으로 초기화
 
         Note:
             강의에서 로직을 그대로 따라 작성했는데 포인트 적립은 입력한 amount 만큼 upsert를 처리하는게 맞을 듯
@@ -50,14 +51,24 @@ class PointService:
 
     @transaction.atomic()
     def use_points(self, user_id: int, amount: float, description: str):
-        """ 포인트 사용하기 """
+        """ 포인트 사용하기
+        Implements
+            사용자 포인트를 찾고, 사용한 금액만큼 차감처리해주기
+
+        Args:
+            user_id (int): 사용자 ID
+            amount (float): 포인트 사용한 금액
+            description (str): 포인트 사용 설명
+
+        Notes:
+
+        """
 
         point_balance: PointBalance = PointBalance.objects.filter(user_id=user_id).first()
         if point_balance is None:
-            raise Exception("사용자를 찾을 수 없음")
+            raise NotFound()
 
         point_balance.subtract_balance(amount)
-        point_balance.save()
 
         point = Point.initilaized(
             user_id=user_id,
@@ -67,6 +78,8 @@ class PointService:
             balance_snapshot=point_balance.balance,
             point_balance=point_balance
         )
+
+        point_balance.save()
         point.save()
 
         return point
