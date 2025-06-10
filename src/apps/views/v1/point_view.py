@@ -25,13 +25,12 @@ class PointHistoryView(APIView, LimitOffsetPagination):
         }
     )
     def get(self, request, *args, **kwargs):
-        user_id = kwargs.get('user_id')
-
         request_serializer = point_search_schema.PointHistoryRequest(data=request.query_params)
         request_serializer.is_valid(raise_exception=True)
 
+        point_histories = self.point_service.get_point_history(user_id=kwargs.get('user_id'))
         paginate_queryset = self.paginate_queryset(
-            self.point_service.search_points(user_id=user_id),
+            point_histories,
             request,
             view=self
         )

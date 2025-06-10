@@ -37,10 +37,6 @@ def log_backoff(details):
 
 class PointService:
 
-    def search_points(self, *, user_id: int):
-        """ 포인트 조회하기 """
-        return Point.objects.filter(user_id=user_id)
-
     @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10, on_backoff=log_backoff)
     @backoff.on_exception(backoff.expo, exception=IntegrityError, max_time=2, max_tries=10)
     @transaction.atomic
@@ -170,8 +166,17 @@ class PointService:
 
     def get_balance(self, user_id: int):
         """ 포인트 재고조회하기 """
-        ...
+        return PointBalance.objects.filter(user_id=user_id).first()
 
     def get_point_history(self, user_id: int):
-        """ 포인트 재고조회하기 """
-        ...
+        """ 포인트 적립 내역 조회하기
+        Implements
+            Point 모델을 기준으로 페이지네이션 리턴하기
+        Note
+            FastCampus 강의에서는 PointBalances 모델과의 관계를 설정해서 가져온다.
+
+        """
+        if user_id is None:
+            raise NotFound()
+
+        return Point.objects.filter(user_id=user_id)
