@@ -21,6 +21,7 @@ DATABASES = {
             'charset': 'utf8mb4',
             "init_command": "SET GLOBAL max_connections = 100000"
         },
+        "CONN_MAX_AGE": 600
     },
     'repeatable_read': {
         'ENGINE': 'django.db.backends.mysql',
@@ -34,6 +35,7 @@ DATABASES = {
             "isolation_level": "REPEATABLE READ",
             "init_command": "SET GLOBAL max_connections = 100000"
         },
+        "CONN_MAX_AGE": 600
     }
 }
 
@@ -93,6 +95,7 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'src.config.exception_handler.custom_exception_handler'
 
 }

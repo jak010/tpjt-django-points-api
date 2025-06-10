@@ -7,6 +7,33 @@ from src.apps.models.point_balance import PointBalance
 
 from src.apps.service.exceptions import OptimisticLockingError
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+def log_backoff(details):
+    """ backoff hook
+
+    Implements:
+        backoff.on_exception 데코레이터가 적용된 경우 실행하는 함수
+
+    Note
+        이 함수를 통해 재시도가 처리될 때 로깅이 가능하도록 만들 수 있음
+
+    TODO
+        25-06-10, 이 함수가 호출된 시점에 재시도된 횟수를 DB에 기록하는 용도로 개선 가능할듯
+
+    """
+    logger.warning(
+        "Retrying %s in %.1f seconds after %d tries due to %s",
+        details['target'].__name__,
+        details['wait'],
+        details['tries'],
+        details['exception']
+    )
+
 
 class PointService:
 
@@ -14,7 +41,7 @@ class PointService:
         """ 포인트 조회하기 """
         return Point.objects.filter(user_id=user_id)
 
-    @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10)
+    @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10, on_backoff=log_backoff)
     @backoff.on_exception(backoff.expo, exception=IntegrityError, max_time=2, max_tries=10)
     @transaction.atomic
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
@@ -37,7 +64,7 @@ class PointService:
                 Ref, https://github.com/dobby-teacher/fastcampus-promotion-project/blob/e57cae3c09264215203c00f51896e4e28249071e/PROJECT-PROMOTION/promotion/point-service/src/main/java/com/fastcampus/pointservice/repository/PointBalanceRepository.java#L11
         """
 
-        point_balance: PointBalance = PointBalance.objects \
+        point_balance: PointBalance = PointBalance.objects.using("repeatable_read") \
             .filter(user_id=user_id) \
             .first()
 
@@ -72,7 +99,10 @@ class PointService:
             description (str): 포인트 사용 설명
 
         Notes:
-            TODO, 2025-06-10 :
+            FastCampus 강의에서는 이 함수에도 REPEATABLE_READ 수준으로 락을 걸어준다.
+
+        TODO:
+         - 2025-06-10
 
         """
 

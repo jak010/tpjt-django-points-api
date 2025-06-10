@@ -61,3 +61,9 @@
                     data=paginate.data
                 ) 
         ```
+
+## 25.06.10
+
+### Django ORM으로 Optimistic Lock 구현하기
+
+- src/apps/service/v1/point_service.py#L26 번 로직 참고
