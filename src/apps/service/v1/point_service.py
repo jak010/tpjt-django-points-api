@@ -1,10 +1,11 @@
-from django.db import transaction, connection
-from django.conf import settings
+import backoff
+from django.db import transaction, IntegrityError
 from rest_framework.exceptions import NotFound
 
 from src.apps.models import Point
 from src.apps.models.point_balance import PointBalance
-from django.db import connection, reset_queries
+
+from src.apps.service.exceptions import OptimisticLockingError
 
 
 class PointService:
@@ -13,6 +14,8 @@ class PointService:
         """ 포인트 조회하기 """
         return Point.objects.filter(user_id=user_id)
 
+    @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10)
+    @backoff.on_exception(backoff.expo, exception=IntegrityError, max_time=2, max_tries=10)
     @transaction.atomic
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
         """ 포인트 적립하기
@@ -34,17 +37,16 @@ class PointService:
                 Ref, https://github.com/dobby-teacher/fastcampus-promotion-project/blob/e57cae3c09264215203c00f51896e4e28249071e/PROJECT-PROMOTION/promotion/point-service/src/main/java/com/fastcampus/pointservice/repository/PointBalanceRepository.java#L11
         """
 
-        point_balance = PointBalance.objects.using("repr").filter(user_id=user_id).first()  # TODO, 2025-06-10 : 이 시점에 Optimistic Lock 처리 필요
+        point_balance: PointBalance = PointBalance.objects \
+            .filter(user_id=user_id) \
+            .first()
 
         if point_balance is None:
-            point_balance = PointBalance.initialized(
-                user_id=user_id,
-                balance=0
-            )
+            point_balance = PointBalance.initialized(user_id=user_id, balance=amount)
+            point_balance.save()  # IntegrityError
         else:
-            point_balance.add_balance(amount)
-
-        point_balance.save()
+            point_balance = point_balance.add_balance(amount)
+            point_balance = point_balance.update_with_optimistic_lock()  # OptimisticLockingError
 
         new_point = Point.initilaized(
             user_id=user_id,
@@ -55,6 +57,7 @@ class PointService:
             point_balance=point_balance
         )
         new_point.save()
+
         return new_point
 
     @transaction.atomic()

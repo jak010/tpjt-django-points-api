@@ -18,10 +18,11 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '23306',
         'OPTIONS': {
-            'charset': 'utf8mb4'
+            'charset': 'utf8mb4',
+            "init_command": "SET GLOBAL max_connections = 100000"
         },
     },
-    'repr': {
+    'repeatable_read': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'points_db',
         'USER': 'root',
@@ -30,7 +31,8 @@ DATABASES = {
         'PORT': '23306',
         'OPTIONS': {
             'charset': 'utf8mb4',
-            "isolation_level": "REPEATABLE READ"
+            "isolation_level": "REPEATABLE READ",
+            "init_command": "SET GLOBAL max_connections = 100000"
         },
     }
 }
