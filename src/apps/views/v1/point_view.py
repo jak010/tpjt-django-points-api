@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from src.apps.service.v1.point_service import PointService
-from src.apps.views.v1.schema import (
+from src.apps.views.schema import (
     point_earn_schema,
     point_use_schema,
     point_cancel_schema,

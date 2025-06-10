@@ -103,7 +103,7 @@ REST_FRAMEWORK = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",  # ✅ 이 설정이 되어 있어야 함
-        "LOCATION": "redis://127.0.0.1:2 6379/1",
+        "LOCATION": "redis://127.0.0.1:26379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "SERIALIZER": "django_redis.serializers.json.JSONSerializer",

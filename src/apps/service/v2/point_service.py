@@ -1,5 +1,6 @@
 import redis
 from django.core.cache import cache
+from django.db import transaction
 
 from src.apps.models import PointBalance, Point
 
@@ -10,6 +11,7 @@ class PointRedisService:
     LOCK_WAIT_TIME = 3
     LOCK_LEASE_TIME = 3
 
+    @transaction.atomic
     def earn_point(self, user_id: int, amount: float, description: str):
         """ Redis 기반 포인트 적립 처리
 
@@ -36,7 +38,7 @@ class PointRedisService:
 
                 # 포인트 잔액 증가
 
-                point_balance = PointBalance.objects.get_or_create(user_id=user_id, defaults={"balance": 0})
+                point_balance, _created = PointBalance.objects.get_or_create(user_id=user_id, defaults={"balance": 0})
                 point_balance.add_balance(amount=amount)
                 point_balance.save()
 
@@ -77,7 +79,8 @@ class PointRedisService:
 
         """
         balance_map = cache.get(f"{self.POINT_BALANCE_MAP}")
-        return balance_map.get(user_id)
+        if balance_map is not None:
+            return balance_map.get(user_id)
 
     def update_balance_cache(self, user_id, current_balance):
         """ Redis 기반 포인트 잔액 업데이트
@@ -86,4 +89,4 @@ class PointRedisService:
             Argument로 입력받은 값들 캐시에 저장하기
 
         """
-        return cache.set(f"{self.POINT_BALANCE_MAP}:{user_id}", current_balance, self.LOCK_LEASE_TIME)
+        return cache.set(f"{self.POINT_BALANCE_MAP}:{user_id}", current_balance)

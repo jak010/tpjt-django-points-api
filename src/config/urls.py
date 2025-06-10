@@ -20,7 +20,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitVie
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/points', include("apps.urls.v1"))  # apps url
+    path('api/v1/points', include("apps.urls.v1")),  # apps url
+    path('api/v2/points', include("apps.urls.v2")),  # apps url
 ]
 
 if settings.DEBUG:

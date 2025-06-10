@@ -11,4 +11,4 @@ class PointEarnUser(HttpUser):
             "amount": 100,
             "description": "string"
         }
-        self.client.post("/api/v1/points/earn", json=payload)
+        self.client.post("/api/v2/points/earn", json=payload)
