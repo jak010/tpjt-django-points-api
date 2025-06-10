@@ -1,6 +1,5 @@
-from django.core.cache import cache
 import redis
-from django.views.decorators.debug import sensitive_post_parameters
+from django.core.cache import cache
 
 from src.apps.models import PointBalance, Point
 
@@ -10,8 +9,6 @@ class PointRedisService:
     POINT_LOCK_PREFIX = "point:lock:"
     LOCK_WAIT_TIME = 3
     LOCK_LEASE_TIME = 3
-
-    def __init__(self):
 
     def earn_point(self, user_id: int, amount: float, description: str):
         """ Redis 기반 포인트 적립 처리
@@ -59,11 +56,11 @@ class PointRedisService:
             print(e)
             raise Exception("Too Many Connection Issue Requests")
 
-    def use_point(self):
-        ...
-
-    def cancel_point(self):
-        ...
+    # def use_point(self):
+    #     ...
+    #
+    # def cancel_point(self):
+    #     ...
 
     def get_balance_from_db(self, user_id):
         point_balance = PointBalance.objects.filter(user_id=user_id).first()
