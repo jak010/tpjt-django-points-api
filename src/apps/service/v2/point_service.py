@@ -11,6 +11,21 @@ class PointRedisService:
     LOCK_WAIT_TIME = 3
     LOCK_LEASE_TIME = 3
 
+    def get_balance(self, user_id: int):
+        """ 포인트 잔액 조회
+
+        Implements
+            캐시에서 잔액 조회 -> 캐시 없으면 DB에서 조회 후 캐시 업데이트
+
+
+        """
+        cached_balance = self.get_balance_from_cache(user_id=user_id)
+        if cached_balance is None:
+            cached_balance = self.get_balance_from_db(user_id=user_id)
+            self.update_balance_cache(user_id, cached_balance)
+
+        return cached_balance
+
     @transaction.atomic
     def earn_point(self, user_id: int, amount: float, description: str):
         """ Redis 기반 포인트 적립 처리
