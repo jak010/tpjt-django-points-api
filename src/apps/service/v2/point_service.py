@@ -104,8 +104,68 @@ class PointRedisService:
         except redis.exceptions.LockError as e:
             raise Exception("Too Many Connection Issue Requests")
 
-    # def cancel_point(self):
-    #     ...
+    def cancel_point(self, point_id: int, description: str):
+        """ 포인트 취소 처리
+
+        Implements
+        ---
+            - 원본 포인트 이력 조회 -> 분산 락 획득 -> 취소 가능 여부 확인 -> 포인트 잔액 원복(적립 취소는 차감, 사용 취소는 증가)
+                -> DB 저장 및 캐시 업데이트 -> 취소 이력 저장
+
+        """
+
+        save_point = Point.object.filter(id=point_id).first()
+        if save_point is None:
+            raise Exception("Point Not Found")
+
+        try:
+            with cache.lock(
+                    f"{self.POINT_LOCK_PREFIX}{save_point.user_id}",
+                    timeout=self.LOCK_LEASE_TIME,
+                    blocking_timeout=self.LOCK_WAIT_TIME
+            ) as lock:
+
+                # 캐시된 잔액 조회
+                current_balance = self.get_balance_from_cache(save_point.user_id)
+                if current_balance is None:
+                    # 캐시된 잔액이 없면 DB에서 조회
+                    current_balance = self.get_balance_from_db(save_point.user_id)
+
+                    #  캐시 업데이트
+                    self.update_balance_cache(save_point.user_id, current_balance)
+
+                # 포인트 잔액 증가
+                point_balance = PointBalance.objects.filter(user_id=save_point.user_id).first()
+                if point_balance is None:
+                    raise Exception("사용자를 찾을 수 없음")
+
+                if save_point.type == Point.Type.EARN:
+                    if current_balance < save_point.amount:
+                        raise Exception("사용자의 포인트 재고은 취소된 포인트보다 작음")
+
+                    new_balance = current_balance - save_point.amount
+                elif save_point.type == Point.Type.USED:
+                    new_balance = current_balance + save_point.amount
+                else:
+                    raise Exception("invalid point type")
+
+                point_balance.set_balance(new_balance)
+                point_balance.save()
+
+                # 취소 이력 저장
+                point = Point.initilaized(
+                    user_id=save_point.user_id,
+                    amount=save_point.amount,
+                    type=Point.Type.CANCELED,
+                    description=description,
+                    balance_snapshot=point_balance.balance,
+                    point_balance=point_balance
+                )
+                point.save()
+                return point
+
+        except redis.exceptions.LockError as e:
+            raise Exception("Too Many Connection Issue Requests")
 
     def get_balance_from_db(self, user_id):
         point_balance = PointBalance.objects.filter(user_id=user_id).first()
