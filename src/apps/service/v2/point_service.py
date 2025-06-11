@@ -18,6 +18,9 @@ class PointRedisService:
         Implements
             분산 락 획득 -> 캐시된 잔액 조회 (없으면 DB에서 조회) -> 포인트 잔액 증가 -> DB 저장 및 캐시 업데이트 -> 포인트 인력 저장
 
+        TODO
+            - 25.06.11 : 락의 범위가 크기 때문에 줄이는 방향 고민하기
+
         """
 
         try:
@@ -31,7 +34,7 @@ class PointRedisService:
                 current_balance = self.get_balance_from_cache(user_id)
                 if current_balance is None:
                     # 캐시된 잔액이 없으면 DB에서 조회
-                    self.get_balance_from_db(user_id)
+                    current_balance = self.get_balance_from_db(user_id)
 
                     #  캐시 업데이트
                     self.update_balance_cache(user_id, current_balance)
@@ -56,7 +59,7 @@ class PointRedisService:
                 return new_point
         except redis.exceptions.LockError as e:
             print(e)
-            raise Exception("Too Many Connection Issue Requests")
+            raise Exception("Too Many Connection Issue Requests")  # Lock을 잡지 못 헀으니 다시 시도해달라고 요청하기 ?
 
     # def use_point(self):
     #     ...
