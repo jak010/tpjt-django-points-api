@@ -58,12 +58,52 @@ class PointRedisService:
                 new_point.save()
                 return new_point
         except redis.exceptions.LockError as e:
-            print(e)
             raise Exception("Too Many Connection Issue Requests")  # Lock을 잡지 못 헀으니 다시 시도해달라고 요청하기 ?
 
-    # def use_point(self):
-    #     ...
-    #
+    def use_point(self, user_id: int, amount: float, description: str):
+        """ 포인트 사용하기
+
+        Implements
+            - 분산 락 획득 -> 캐시된 잔액 조회(없으면 DB에서 조회) -> 잔액 체크 -> 포인트 잔액 감소 -> DB 저장 및 캐시 업데이트 -> 포인트 이력 저장
+
+        """
+        try:
+            with cache.lock(
+                    f"{self.POINT_LOCK_PREFIX}{user_id}",
+                    timeout=self.LOCK_LEASE_TIME,
+                    blocking_timeout=self.LOCK_WAIT_TIME
+            ) as lock:
+
+                current_balance = self.get_balance_from_cache(user_id=user_id)
+
+                if current_balance is None:
+                    current_balance = self.get_balance_from_db(user_id=user_id)
+                    self.update_balance_cache(user_id, current_balance)
+
+                if current_balance < amount:
+                    raise Exception("사용자의 포인트 재고은 취소된 포인트보다 작음")
+
+                point_balance = PointBalance.objects.filter(user_id=user_id).first()
+                if point_balance is None:
+                    raise Exception("사용자를 찾을 수 없음")
+
+                point_balance.subtract_balance(amount)
+                self.update_balance_cache(user_id, point_balance.balance)
+
+                point = Point.initilaized(
+                    user_id=user_id,
+                    amount=amount,
+                    type=Point.Type.USED,
+                    description=description,
+                    balance_snapshot=point_balance.balance,
+                    point_balance=point_balance
+                )
+                point.save()
+                return point
+
+        except redis.exceptions.LockError as e:
+            raise Exception("Too Many Connection Issue Requests")
+
     # def cancel_point(self):
     #     ...
 
