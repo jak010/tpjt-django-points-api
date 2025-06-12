@@ -8,7 +8,7 @@ class PointEarnUser(HttpUser):
     def earn_point(self):
         payload = {
             "user_id": 100,
-            "amount": 100,
+            "amount": 10000,
             "description": "string"
         }
         self.client.post("/api/v2/points/earn", json=payload)

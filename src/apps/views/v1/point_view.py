@@ -64,7 +64,6 @@ class PointEarnView(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        from django.db import connection, reset_queries
         serializer = point_earn_schema.PointEarnRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
 
