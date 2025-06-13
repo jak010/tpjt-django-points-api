@@ -10,13 +10,14 @@ API_HOST=127.0.0.1
 API_PORT=8000
 
 
+UWSGI_CONFIG_PATH=$(PWD)/src/uwsgi.ini
 
 
 run.local:
-	python $(SRC)/manage.py runserver 0.0.0.0:8000 --settings=$(DJANGO_SETTINGS_MODULE)
+	ulimit -n 4096 &&  python $(SRC)/manage.py runserver 0.0.0.0:8000 --noreload --settings=$(DJANGO_SETTINGS_MODULE)
 
 run.deploy:
-	export PYTHONPATH=$(PWD)/src && uwsgi --harakiri 30 --post-buffering 1 --buffer-size 32768 --module config.wsgi:application  --workers 4 --http :8000
+	export PYTHONPATH=$(PWD)/src && ulimit -n 4096 && uwsgi --ini $(UWSGI_CONFIG_PATH)
 
 
 run.db:

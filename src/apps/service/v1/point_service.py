@@ -37,8 +37,8 @@ def log_backoff(details):
 
 class PointService:
 
-    @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10, on_backoff=log_backoff)
-    @backoff.on_exception(backoff.expo, exception=IntegrityError, max_time=2, max_tries=10)
+    # @backoff.on_exception(backoff.expo, exception=OptimisticLockingError, max_time=2, max_tries=10, on_backoff=log_backoff)
+    # @backoff.on_exception(backoff.expo, exception=IntegrityError, max_time=2, max_tries=10)
     @transaction.atomic
     def earn_points(self, user_id: int, amount: float, description: str) -> Point:
         """ 포인트 적립하기
@@ -60,7 +60,7 @@ class PointService:
                 Ref, https://github.com/dobby-teacher/fastcampus-promotion-project/blob/e57cae3c09264215203c00f51896e4e28249071e/PROJECT-PROMOTION/promotion/point-service/src/main/java/com/fastcampus/pointservice/repository/PointBalanceRepository.java#L11
         """
 
-        point_balance: PointBalance = PointBalance.objects.using("repeatable_read") \
+        point_balance: PointBalance = PointBalance.objects \
             .filter(user_id=user_id) \
             .first()
 

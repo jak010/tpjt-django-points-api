@@ -1,11 +1,10 @@
-from locust import HttpUser, task, between, FastHttpUser
+from locust import FastHttpUser, task, HttpUser
 
 
 class PointEarnUser(FastHttpUser):
-    connection_timeout = 10
-    network_timeout = 10
 
-    # wait_time = between(1, 10)  # 각 요청 사이의 대기 시간 (1~3초)
+    max_retries = 3
+
 
     @task
     def earn_point(self):
@@ -14,4 +13,8 @@ class PointEarnUser(FastHttpUser):
             "amount": 10000,
             "description": "string"
         }
-        self.client.post("/api/v1/points/earn", json=payload)
+        self.client.post(
+            "/api/v1/points/earn",
+            json=payload,
+        )
+
