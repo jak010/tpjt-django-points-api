@@ -60,28 +60,28 @@ DEVELOP_APPS = [
 INSTALLED_APPS = INSTALLED_APPS + DEVELOP_APPS
 
 # SQL LOGGING
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'sql': {
-#             '()': 'django_sqlformatter.SqlFormatter',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'DEBUG',
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'sql',
-#         },
-#     },
-#     'loggers': {
-#         'django.db.backends': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG',
-#         }
-#     }
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'sql': {
+            '()': 'django_sqlformatter.SqlFormatter',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'sql',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        }
+    }
+}
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Django로 구현하는 실시간 적립금 조회 서비스',  # OpenAPI 3.0 페이지 타이틀,
