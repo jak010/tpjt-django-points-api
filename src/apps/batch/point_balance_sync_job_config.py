@@ -1,9 +1,13 @@
+import datetime
+from datetime import timedelta
 from typing import List, Dict
 
 from django.core.cache import cache
 from rest_framework.pagination import LimitOffsetPagination
 
-from src.apps.models import PointBalance
+from src.apps.models import PointBalance, Point
+from src.apps.models.daily_report import DailyPointReport
+from src.apps.models.point_summary import PointSummary
 
 
 class PointBalanceSyncJobConfig:
@@ -23,10 +27,11 @@ class PointBalanceSyncJobConfig:
         Implementation
 
             sync_point_balance_step()
-            create_daily_point_report_step()
+            generate_daily_point_report_step()
 
         """
-        raise NotImplementedError()
+        cls.sync_point_balance_step()
+        cls.generate_daily_report_step()
 
     @classmethod
     def sync_point_balance_step(cls):
@@ -52,7 +57,11 @@ class PointBalanceSyncJobConfig:
             - Processor : 일별 리포트 생성
             - Writer : DB 리포트 저장
         """
-        ...
+
+        daily_points = cls.point_reader()
+        point_summaries = cls.point_processor(points=daily_points)
+
+        cls.report_writer(point_summaries=point_summaries)
 
     @classmethod
     def point_balance_reader(cls) -> List[PointBalance]:
@@ -98,30 +107,66 @@ class PointBalanceSyncJobConfig:
             cache_client.hset("point:balance", k, v)
 
     @classmethod
-    def point_reader(cls):
+    def point_reader(cls) -> List[Point]:
         """ 포인트 Reader
 
         Implementation
             ORM을 사용하여 DB에서 전일 포인트 트랜잭션을 조회
 
         """
-        ...
+        _current = datetime.datetime.now()
+        start_time = _current.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_time = _current.replace(hour=23, minute=59, second=59, microsecond=0)
+
+        return Point.objects.filter(
+            created_at__gte=start_time,
+            created_at__lte=end_time
+        ).all()
 
     @classmethod
-    def point_processor(cls):
+    def point_processor(cls, points: List[Point]) -> List[PointSummary]:
         """ 포인트 Processor
 
         Implementation
             포인트 트랜잭션을 사용자별로 집계하여 PointSumamry 생성
 
         """
-        ...
+        results = []
+        for point in points:
+            if point.type == Point.Type.EARN.value:
+                results.append(PointSummary(point.user_id, point.amount, 0, 0))
+            if point.type == Point.Type.USED.value:
+                results.append(PointSummary(point.user_id, 0, point.amount, 0))
+            if point.type == Point.Type.CANCELED.value:
+                results.append(PointSummary(point.user_id, 0, 0, point.amount))
+        return results
 
     @classmethod
-    def point_writer(cls):
+    def report_writer(cls, point_summaries: List[PointSummary]):
         """ 포인트 Writer
 
         Implementation
             집계된 포인트 트랜잭션을 일별 리포트로 변환하여 DB에 저장
         """
-        ...
+
+        for point_summary in point_summaries:
+
+            daily_point = DailyPointReport.objects.filter(
+                user_id=point_summary.user_id,
+                report_date=datetime.datetime.now() - timedelta(days=1)
+            ).first()
+
+            if daily_point:
+                daily_point.earn_amount += point_summary.earn_amount
+                daily_point.use_amount += point_summary.use_amount
+                daily_point.cancel_amount = point_summary.cancel_amount
+                daily_point.save()
+            else:
+                new_obj = DailyPointReport.init_entity(
+                    user_id=point_summary.user_id,
+                    report_date=datetime.datetime.now() - timedelta(days=1),  # 전일 데이터
+                    earn_amount=point_summary.earn_amount,
+                    use_amount=point_summary.use_amount,
+                    cancel_amount=point_summary.cancel_amount
+                )
+                new_obj.save()

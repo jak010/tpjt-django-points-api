@@ -5,9 +5,9 @@ from src.apps.batch.point_balance_sync_job_config import PointBalanceSyncJobConf
 sched = BackgroundScheduler()
 
 
-@sched.scheduled_job('interval', seconds=5)
+@sched.scheduled_job('cron', hour=1, minute=0)  # 매일 새벽 1시에 수행
 def point_balance_reader():
-    PointBalanceSyncJobConfig.sync_point_balance_step()
+    PointBalanceSyncJobConfig.point_balance_sync_job()
 
 
 def on_start():
